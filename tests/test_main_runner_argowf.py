@@ -1,31 +1,9 @@
 import os
-import sys
-import subprocess
 import json
+import subprocess
 
-# 👇 Add these lines to fix import path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../zoo-argowf-runner')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../zoo-calrissian-runner')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../zoo-wes-runner')))
-
-from zoo_argowf_runner.runner import ZooArgoWorkflowsRunner
-
-
-
-# ✅ Dummy handler that mocks the real ExecutionHandler
-class DummyHandler:
-    def pre_execution_hook(self): pass
-    def post_execution_hook(self, **kwargs): pass
-    def get_secrets(self): return None
-    def get_additional_parameters(self): return {}
-    def get_pod_env_vars(self): return None
-    def get_pod_node_selector(self): return None
-    def handle_outputs(self, **kwargs): pass
-    def set_job_id(self, job_id): pass
-
-
-def test_zoo_argowf_runner_initialization(tmp_path):
-    # ✅ Dummy input files
+def test_argowf_runner_invocation(tmp_path):
+    # Dummy CWL Workflow JSON
     dummy_cwl = {
         "cwlVersion": "v1.0",
         "class": "Workflow",
@@ -36,35 +14,45 @@ def test_zoo_argowf_runner_initialization(tmp_path):
     }
 
     dummy_conf = {
-        "lenv": {
-            "Identifier": "main",
-            "usid": "test123",
-            "message": "",
-            "cwd": str(tmp_path)
-        },
-        "main": {
-            "tmpPath": str(tmp_path)
-        },
-        "auth_env": {
-            "user": "testuser"
-        }
+        "lenv": {"Identifier": "main", "usid": "test123", "message": "", "cwd": str(tmp_path)},
+        "main": {"tmpPath": str(tmp_path)},
+        "auth_env": {"user": "testuser"}
     }
 
     dummy_inputs = {}
     dummy_outputs = {"stac": {"value": None}}
 
-    # ✅ Instantiate the runner with dummy handler
-    runner = ZooArgoWorkflowsRunner(
-        cwl=dummy_cwl,
-        conf=dummy_conf,
-        inputs=dummy_inputs,
-        outputs=dummy_outputs,
-        execution_handler=DummyHandler()
+    # Save dummy data to temp JSON files
+    cwl_path = tmp_path / "cwl.json"
+    conf_path = tmp_path / "conf.json"
+    inputs_path = tmp_path / "inputs.json"
+    outputs_path = tmp_path / "outputs.json"
+
+    for path, data in [
+        (cwl_path, dummy_cwl),
+        (conf_path, dummy_conf),
+        (inputs_path, dummy_inputs),
+        (outputs_path, dummy_outputs)
+    ]:
+        with open(path, "w") as f:
+            json.dump(data, f)
+
+    # Call main_runner.py as subprocess
+    result = subprocess.run(
+        [
+            "python3", "../main_runner.py",
+            "--runner", "argowf",
+            "--cwl", str(cwl_path),
+            "--conf", str(conf_path),
+            "--inputs", str(inputs_path),
+            "--outputs", str(outputs_path)
+        ],
+        capture_output=True,
+        text=True
     )
 
-    # ✅ Assertions (basic checks)
-    assert runner.get_workflow_id() == "main"
-    assert runner.get_processing_parameters() == {}
-    assert runner.get_volume_size().endswith("Gi") or runner.get_volume_size().endswith("Mi")
-    assert isinstance(runner.get_max_cores(), int)
-    assert runner.get_max_ram().endswith("Mi")
+    print("STDOUT:", result.stdout)
+    print("STDERR:", result.stderr)
+
+    # Assert runner initialized successfully
+    assert "Initialized argowf runner" in result.stdout

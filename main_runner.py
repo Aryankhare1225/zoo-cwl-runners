@@ -30,6 +30,18 @@ def select_runner(runner_type: str):
     else:
         raise ValueError(f"Unsupported runner type: {runner_type}")
 
+# Dummy execution handler for unit testing
+class DummyHandler:
+    def pre_execution_hook(self): pass
+    def post_execution_hook(self, **kwargs): pass
+    def get_secrets(self): return None
+    def get_additional_parameters(self): return {}
+    def get_pod_env_vars(self): return None
+    def get_pod_node_selector(self): return None
+    def handle_outputs(self, **kwargs): pass
+    def set_job_id(self, job_id): pass
+
+
 
 def main():
     parser = argparse.ArgumentParser(description="Main runner entry point for CWL workflows")
