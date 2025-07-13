@@ -40,7 +40,7 @@ def test_argowf_runner_invocation(tmp_path):
     # Call main_runner.py as subprocess
     result = subprocess.run(
         [
-            "python3", "../main_runner.py",
+            "python3", os.path.abspath(os.path.join(os.path.dirname(__file__), "../main_runner.py")),
             "--runner", "argowf",
             "--cwl", str(cwl_path),
             "--conf", str(conf_path),

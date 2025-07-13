@@ -49,16 +49,24 @@ def test_calrissian_runner_invocation(tmp_path):
     os.environ["WRAPPER_STAGE_IN"] = os.path.join(zoo_calrissian_assets, "stagein.yaml")
     os.environ["WRAPPER_STAGE_OUT"] = os.path.join(zoo_calrissian_assets, "stageout.yaml")
 
+    #env = os.environ.copy()
+    #env["PYTHONPATH"] = (os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))+ ":" + env.get("PYTHONPATH", ""))
+
+    #print("PYTHONPATH being passed to subprocess:")
+    #print(env["PYTHONPATH"])
+
+    
     # 🏃 Execute main_runner with Calrissian
     result = subprocess.run(
         [
-            "python3", "../main_runner.py",
+            "python3", os.path.abspath(os.path.join(os.path.dirname(__file__), "../main_runner.py")),
             "--runner", "calrissian",
             "--cwl", str(cwl_path),
             "--conf", str(conf_path),
             "--inputs", str(inputs_path),
             "--outputs", str(outputs_path)
         ],
+        #env=env,
         capture_output=True,
         text=True
     )
