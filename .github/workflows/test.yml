@@ -3,6 +3,7 @@ name: CI - Test CWL Runners
 on:
   push:
     branches:
+      - main
       - develop
   pull_request:
     branches:
