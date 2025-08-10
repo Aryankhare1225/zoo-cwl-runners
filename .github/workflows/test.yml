@@ -31,7 +31,12 @@ jobs:
 
       # - name: Run tests
       #   run: pytest -v
-
+      - name: Run unit tests
+        run: |
+          PYTHONPATH=$PWD pytest -v -m "not integration" tests/unit
+          
       - name: Run unit tests only
         run: pytest -v tests/unit
+
+
 
