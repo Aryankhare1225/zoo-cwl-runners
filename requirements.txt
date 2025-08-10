@@ -1,11 +1,27 @@
+# ---- Core / Shared ----
 attrs==23.2.0
 cwl-utils==0.38
+cwl-wrapper>=0.3.2
 loguru==0.7.2
-pyyaml==6.0.1
+PyYAML==6.0.1
 httpx==0.27.0
-hera-workflows==5.20.1
-email-validator==2.2.0
 typing-extensions==4.8.0
 typing-inspection==0.4.0
-dnspython==2.4.2
+
+# ---- Calrissian ----
+pycalrissian==0.15.0
+
+# ---- Argo Workflows (Hera) ----
+hera-workflows==5.20.1
+kubernetes==29.0.0
 pydantic==1.10.13
+email-validator==2.2.0
+dnspython==2.4.2
+
+# ---- Testing / Docs (keep if you build docs in CI) ----
+pytest==8.4.1
+pytest-mock==3.14.0
+mkdocs==1.6.0
+mkdocs-material==9.5.27
+mkdocs-jupyter==0.25.1
+pdocs==1.2.0
