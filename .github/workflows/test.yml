@@ -32,6 +32,6 @@ jobs:
       # - name: Run tests
       #   run: pytest -v
 
-      - name: Run unit tests (skip integration)
-        run: pytest -v -m "not integration"
+      - name: Run unit tests only
+        run: pytest -v tests/unit
 
