@@ -1,3 +1,8 @@
+# at the top of each of the four files
+import pytest
+pytestmark = pytest.mark.integration
+
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../zoo-calrissian-runner")))
