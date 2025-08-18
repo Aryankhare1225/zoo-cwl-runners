@@ -1,42 +1,94 @@
+# .github/workflows/test.yml
 name: CI - Test CWL Runners
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
+  workflow_dispatch: {}
 
 jobs:
-  test:
+  unit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install CI deps (minimal)
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-ci.txt
+      - name: Run unit tests only
+        run: PYTHONPATH=$PWD pytest -v tests/unit
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      # Calrissian runner declares PIP_EXTRA_INDEX_URL in its hatch env; replicate here so pycalrissian can be found if it lives on TestPyPI.
+      PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+
+      # Check out your forks (or upstream) of shared repos
+      - name: Checkout zoo-runner-common
+        uses: actions/checkout@v4
+        with:
+          repository: Aryankhare1225/zoo-runner-common
+          path: deps/zoo-runner-common
+
+      - name: Checkout zoo-template-common
+        uses: actions/checkout@v4
+        with:
+          repository: Aryankhare1225/zoo-template-common
+          path: deps/zoo-template-common
+
+      # Check out runners (use your forks if you’ve modified them)
+      - name: Checkout zoo-argowf-runner
+        uses: actions/checkout@v4
+        with:
+          repository: EOEPCA/zoo-argowf-runner
+          path: deps/zoo-argowf-runner
+
+      - name: Checkout zoo-wes-runner
+        uses: actions/checkout@v4
+        with:
+          repository: EOEPCA/zoo-wes-runner
+          path: deps/zoo-wes-runner
+
+      - name: Checkout zoo-calrissian-runner
+        uses: actions/checkout@v4
+        with:
+          repository: EOEPCA/zoo-calrissian-runner
+          path: deps/zoo-calrissian-runner
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install shared packages (editable)
         run: |
           pip install --upgrade pip
-          # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # pip install pytest
-          pip install -r requirements-ci.txt
+          pip install -e deps/zoo-runner-common
+          pip install -e deps/zoo-template-common
 
-      # - name: Run tests
-      #   run: pytest -v
-      - name: Run unit tests
+      - name: Install runners
         run: |
-          PYTHONPATH=$PWD pytest -v -m "not integration" tests/unit
-          
-      - name: Run unit tests only
-        run: pytest -v tests/unit
+          # Poetry project: zoo-wes-runner; poetry-core build means pip install . works
+          pip install deps/zoo-wes-runner
+          # Hatch projects: pip install . works
+          pip install deps/zoo-argowf-runner
+          pip install deps/zoo-calrissian-runner || true  # allow failure for now (pycalrissian issues)
 
+      - name: Set PYTHONPATH (fallback if some aren’t installed)
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH:$PWD/deps/zoo-argowf-runner:$PWD/deps/zoo-wes-runner:$PWD/deps/zoo-calrissian-runner:$PWD/deps/zoo-runner-common:$PWD/deps/zoo-template-common" >> $GITHUB_ENV
 
+      - name: Install test deps
+        run: pip install pytest
 
+      - name: Run integration tests (skip calrissian for now)
+        run: pytest -v -m integration -k "not calrissian"
