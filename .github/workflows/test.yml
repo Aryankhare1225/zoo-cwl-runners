@@ -49,19 +49,19 @@ jobs:
       - name: Checkout zoo-argowf-runner
         uses: actions/checkout@v4
         with:
-          repository: EOEPCA/zoo-argowf-runner
+          repository: Aryankhare1225/zoo-argowf-runner
           path: deps/zoo-argowf-runner
 
       - name: Checkout zoo-wes-runner
         uses: actions/checkout@v4
         with:
-          repository: EOEPCA/zoo-wes-runner
+          repository: Aryankhare1225/zoo-wes-runner
           path: deps/zoo-wes-runner
 
       - name: Checkout zoo-calrissian-runner
         uses: actions/checkout@v4
         with:
-          repository: EOEPCA/zoo-calrissian-runner
+          repository: Aryankhare1225/zoo-calrissian-runner
           path: deps/zoo-calrissian-runner
 
       - name: Set up Python
