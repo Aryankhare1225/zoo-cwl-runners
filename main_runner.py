@@ -25,13 +25,13 @@ def select_runner(runner_type: str) -> Type[Any]:
     if runner_type == "calrissian":
         # module name is the package published by the repo
         mod = importlib.import_module("zoo_calrissian_runner")
-        return getattr(mod, "ZooCalrissianRunner")
+        return ZooCalrissianRunner
     elif runner_type == "argowf":
         mod = importlib.import_module("zoo_argowf_runner.runner")
-        return getattr(mod, "ZooArgoWorkflowsRunner")
+        return ZooArgoWorkflowsRunner
     elif runner_type == "wes":
         mod = importlib.import_module("zoo_wes_runner.wes_runner")
-        return getattr(mod, "ZooWESRunner")
+        return ZooWESRunner
     raise ValueError(f"Unsupported runner type: {runner_type}")
 
 # Dummy execution handler for unit testing
