@@ -73,6 +73,6 @@ runner = ZooArgoWorkflowsRunner(
 
 # Just test parameter parsing (do not call .execute)
 print("✅ ZooArgoWorkflowsRunner initialized successfully")
-print("Volume size:", runner.get_volume_size())
-print("Max cores:", runner.get_max_cores())
-print("Max RAM:", runner.get_max_ram())
+# print("Volume size:", runner.get_volume_size())
+# print("Max cores:", runner.get_max_cores())
+# print("Max RAM:", runner.get_max_ram())
