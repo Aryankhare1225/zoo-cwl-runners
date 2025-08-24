@@ -2,17 +2,13 @@ import os
 import sys
 import argparse
 import json
-from typing import Dict
+from typing import Dict, Type, Any
 
-# Extend sys path to access runner directories
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../zoo-calrissian-runner')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../zoo-argowf-runner')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../zoo-wes-runner')))
-
-# Import runner classes
-from zoo_calrissian_runner import ZooCalrissianRunner
-from zoo_argowf_runner.runner import ZooArgoWorkflowsRunner
-from zoo_wes_runner.wes_runner import ZooWESRunner
+# Optional: allow CI (integration job) to inject a deps directory without
+# making unit imports heavy. If ZOO_CWL_RUNNERS_DEPS is set, prepend it.
+_deps = os.environ.get("ZOO_CWL_RUNNERS_DEPS")
+if _deps:
+    sys.path.insert(0, _deps)
 
 
 
@@ -20,15 +16,23 @@ def load_json(path: str) -> Dict:
     with open(path, 'r') as f:
         return json.load(f)
 
-def select_runner(runner_type: str):
+def select_runner(runner_type: str) -> Type[Any]:
+    """
+    Lazily import and return the requested runner class.
+    Keeps module import cheap so unit tests can import main_runner
+    without requiring runner deps to exist in the environment.
+    """
     if runner_type == "calrissian":
-        return ZooCalrissianRunner
+        # module name is the package published by the repo
+        mod = importlib.import_module("zoo_calrissian_runner")
+        return getattr(mod, "ZooCalrissianRunner")
     elif runner_type == "argowf":
-        return ZooArgoWorkflowsRunner
+        mod = importlib.import_module("zoo_argowf_runner.runner")
+        return getattr(mod, "ZooArgoWorkflowsRunner")
     elif runner_type == "wes":
-        return ZooWESRunner
-    else:
-        raise ValueError(f"Unsupported runner type: {runner_type}")
+        mod = importlib.import_module("zoo_wes_runner.wes_runner")
+        return getattr(mod, "ZooWESRunner")
+    raise ValueError(f"Unsupported runner type: {runner_type}")
 
 # Dummy execution handler for unit testing
 class DummyHandler:
@@ -45,7 +49,7 @@ class DummyHandler:
 
 def main():
     parser = argparse.ArgumentParser(description="Main runner entry point for CWL workflows")
-    parser.add_argument("--runner", type=str, required=True, help="Runner type: calrissian, argo, wes")
+    parser.add_argument("--runner", type=str, required=True, help="Runner type: calrissian, argowf, wes")
     parser.add_argument("--cwl", type=str, required=True, help="Path to CWL file (JSON)")
     parser.add_argument("--conf", type=str, required=True, help="Path to conf file (JSON)")
     parser.add_argument("--inputs", type=str, required=True, help="Path to inputs file (JSON)")
